@@ -1,0 +1,225 @@
+@import "tailwindcss";
+
+html {
+  scroll-behavior: smooth;
+}
+
+:root {
+  /* Backgrounds - Deep Pitch Black for Contrast */
+  --bg-primary: #020202;
+  --bg-secondary: #080808;
+  --surface: rgba(255, 255, 255, 0.03);
+  --surface-hover: rgba(255, 255, 255, 0.06);
+
+  /* Borders - slightly crisper */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-bright: rgba(255, 255, 255, 0.15);
+
+  /* Text (90% Scale intended) - Brighter for Pop */
+  --text-primary: #FFFFFF;
+  --text-secondary: #C0C0C6;
+  /* Significantly brighter than previous #94949E */
+  --text-muted: #71717A;
+  /* Lighter Zinc for better legibility */
+
+  /* Accent - Punchier Red */
+  --accent: #FF4444;
+  --accent-soft: rgba(255, 68, 68, 0.1);
+  --accent-hover: rgba(255, 68, 68, 0.2);
+
+  /* Grid */
+  --grid-color: rgba(255, 255, 255, 0.05);
+
+  /* Compatibility */
+  --background: var(--bg-primary);
+  --foreground: var(--text-primary);
+}
+
+@theme inline {
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --font-sans: 'Geist', 'Inter', var(--font-inter), sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Geist', 'Inter', var(--font-inter), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* 90% scale feel reached via tighter line heights and smaller base */
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* n8n Inspired Dot Grid */
+.bg-dot-grid {
+  background-image: radial-gradient(var(--grid-color) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Professional Scales (approx 90% of standard) */
+h1,
+.h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+h2,
+.h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+h3,
+.h3 {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+p,
+.body {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Premium Compact Card */
+.premium-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-bright);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 59, 59, 0.3);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+}
+
+/* Node Connectors (Animated Lines) */
+.node-line {
+  position: absolute;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  height: 1px;
+  width: 100%;
+  opacity: 0.2;
+}
+
+/* ========================================================================= */
+/* CREATIVE UX ENHANCEMENTS (Timeline Glow, Rolling Text, Magnetic Links)    */
+/* ========================================================================= */
+
+/* Rolling Hover Text Animation */
+.hover-link {
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.hover-in {
+  position: relative;
+  transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hover-in .hover-text-clone {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+}
+
+.hover-link:hover .hover-in {
+  transform: translateY(-100%);
+  color: var(--accent);
+}
+
+/* Glowing Timeline CSS */
+.career-timeline-line {
+  width: 3px;
+  /* Red/Orange gradient fading up */
+  background-image: linear-gradient(to top, var(--accent) 20%, #ff8c8c 50%, transparent 95%);
+}
+
+.career-dot-glow {
+  background-color: var(--accent);
+  width: 12px;
+  height: 12px;
+  border-radius: 50px;
+  /* Multi-layered Neon Red/Orange Glow */
+  box-shadow: 0px 0px 5px 2px rgba(255, 68, 68, 0.8),
+    0px 0px 15px 8px rgba(255, 0, 0, 0.5),
+    0px 0px 50px 15px rgba(255, 100, 100, 0.3);
+  animation: timelinePulsate 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes timelinePulsate {
+  0% {
+    box-shadow: 0px 0px 5px 2px rgba(255, 68, 68, 0.6);
+    transform: scale(0.95);
+  }
+
+  100% {
+    box-shadow: 0px 0px 8px 3px rgba(255, 68, 68, 0.9),
+      0px 0px 20px 8px rgba(255, 0, 0, 0.6),
+      0px 0px 60px 15px rgba(255, 100, 100, 0.4);
+    transform: scale(1.05);
+  }
+}
+/* Hide Scrollbar globally for horizontal lists */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
