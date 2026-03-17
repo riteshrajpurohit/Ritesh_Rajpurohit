@@ -51,13 +51,13 @@ export default function Timeline() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="mb-20"
+          className="mb-12 md:mb-20"
         >
           <div className="flex items-center gap-3 mb-4">
             <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />
             <span className="mono text-[var(--accent)] tracking-[0.2em]">05 // EXECUTION_LOGS</span>
           </div>
-          <h2 className="text-4xl md:text-6xl font-black text-[var(--text-primary)] mb-4 tracking-tighter">
+          <h2 className="text-3xl md:text-6xl font-black text-[var(--text-primary)] mb-4 tracking-tighter">
             Engineering <span className="text-[var(--accent)]">History.</span>
           </h2>
           <p className="text-[var(--text-secondary)] text-sm max-w-xl leading-relaxed">
@@ -104,7 +104,7 @@ function TimelineItem({ item, index }: { item: any; index: number }) {
 
         {/* Compact Pipeline Card */}
         <div className="flex-1">
-          <div className="premium-card p-5 group-hover:bg-[var(--surface-hover)]">
+          <div className="premium-card p-4 sm:p-5 group-hover:bg-[var(--surface-hover)]">
             <div className="flex items-center gap-2 mb-3">
               <span className="mono text-[8px] text-[var(--accent)] bg-[var(--accent)]/10 px-1.5 py-0.5 rounded-sm border border-[var(--accent)]/20 uppercase">
                 {item.type || 'EVENT'}

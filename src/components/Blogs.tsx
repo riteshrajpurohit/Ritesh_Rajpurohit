@@ -68,9 +68,6 @@ export default function Blogs() {
                         <p className="text-[var(--text-secondary)] text-sm max-w-xl leading-relaxed">
                             Insights, tutorials, and deep dives into modern web development, UI/UX engineering, and software architecture directly from my Dev.to blog.
                         </p>
-                        <div className="hidden md:flex gap-4">
-                            {/* Buttons moved to carousel wrapper */}
-                        </div>
                     </div>
                     <a
                         href="https://dev.to/riteshrajpurohit"

@@ -39,7 +39,7 @@ const INTERESTS = [
 
 export default function About() {
     return (
-        <section className="relative z-20 bg-[var(--bg-primary)] py-16 md:py-32 px-4 md:px-12 overflow-hidden bg-dot-grid" id="about">
+        <section className="relative z-20 bg-[var(--bg-primary)] py-12 md:py-32 px-4 sm:px-6 md:px-12 overflow-hidden bg-dot-grid" id="about">
             <div className="max-w-6xl mx-auto relative z-10 cursor-default">
 
                 {/* Header Section */}
@@ -74,11 +74,11 @@ export default function About() {
                     >
                         <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)]/5 rounded-bl-full blur-[40px] -z-10 group-hover:bg-[var(--accent)]/10 transition-colors" />
 
-                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-[var(--text-primary)] leading-[1.15] mb-8 tracking-tighter">
-                            Hey, I’m <span className="text-[var(--accent)]">Ritesh Rajpurohit</span> — a Full-Stack & AI Engineer who probably spends more time in VS Code than anywhere else.
+                        <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-[var(--text-primary)] leading-[1.2] mb-6 tracking-tighter">
+                            Hey, I'm <span className="text-[var(--accent)]">Ritesh Rajpurohit</span> — a Full-Stack & AI Engineer who probably spends more time in VS Code than anywhere else.
                         </h2>
 
-                        <div className="space-y-6 text-[var(--text-secondary)] text-base sm:text-lg leading-relaxed">
+                        <div className="space-y-5 text-[var(--text-secondary)] text-sm sm:text-base leading-relaxed">
                             <p>
                                 I build things for the web that actually matter. My usual workflow?
                                 <br />
