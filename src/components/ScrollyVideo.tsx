@@ -21,10 +21,10 @@ export default function ScrollyVideo({ src, children }: ScrollyVideoProps) {
   // Target progress for the video
   const targetProgress = useRef(0);
 
-  // Smooth out the scroll value
+  // Smooth out the scroll value to prevent sudden jumps, but keep it tight
   const springScroll = useSpring(scrollYProgress, {
-    damping: 100, // Increased damping for smoother transition
-    stiffness: 800, // Increased stiffness for better response
+    stiffness: 150,
+    damping: 30,
     restDelta: 0.001
   });
 
@@ -38,17 +38,19 @@ export default function ScrollyVideo({ src, children }: ScrollyVideoProps) {
 
     const updateVideo = () => {
       const video = videoRef.current;
-      if (video && video.duration && video.readyState >= 2) {
-        // Simple smoothing to prevent "fighting" between frames
+
+      // CRITICAL FIX: Only update currentTime if the browser has finished seeking the LAST requested frame.
+      // If we spam video.currentTime 60 times a second without checking !video.seeking,
+      // the browser's video decoder gets overwhelmed queueing up I-frames, causing extreme lag/freezing.
+      if (video && !video.seeking && video.duration && video.readyState >= 2) {
         const currentProgress = video.currentTime / video.duration;
         const diff = targetProgress.current - currentProgress;
 
-        // Only update if there's a significant difference to avoid micro-lag
-        if (Math.abs(diff) > 0.002) {
-          // Seek directly to the target progress
+        if (Math.abs(diff) > 0.001) {
           video.currentTime = targetProgress.current * video.duration;
         }
       }
+
       rafId = requestAnimationFrame(updateVideo);
     };
 
