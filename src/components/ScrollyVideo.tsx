@@ -23,6 +23,7 @@ export default function ScrollyVideo({
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isReady, setIsReady] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(true);
 
   // Scroll progress for the container
   const { scrollYProgress } = useScroll({
@@ -51,8 +52,8 @@ export default function ScrollyVideo({
     const updateVideo = () => {
       const video = videoRef.current;
 
-      // Only update video if it's ready and not already seeking
-      // This prevents browser lag from queuing up too many I-frames
+      // Only update video if it's ready, loaded enough, and not already seeking
+      // This prevents browser lag from queuing up too many I-frames on slow networks
       if (
         video &&
         !video.seeking &&
@@ -63,8 +64,9 @@ export default function ScrollyVideo({
         const currentProgress = video.currentTime / video.duration;
         const diff = targetProgress.current - currentProgress;
 
-        // Only update if difference is significant enough
-        if (Math.abs(diff) > 0.0015) {
+        // Only update if difference is significant enough to avoid micro-updates
+        // Larger threshold (0.02) = smoother on slow networks, slightly less responsive on fast
+        if (Math.abs(diff) > 0.02) {
           video.currentTime = targetProgress.current * video.duration;
         }
       }
@@ -78,6 +80,15 @@ export default function ScrollyVideo({
 
   const handleVideoReady = () => {
     setIsReady(true);
+    setIsBuffering(false);
+  };
+
+  const handleWaiting = () => {
+    setIsBuffering(true);
+  };
+
+  const handleCanPlay = () => {
+    setIsBuffering(false);
   };
 
   return (
@@ -85,7 +96,6 @@ export default function ScrollyVideo({
       <div className="sticky top-0 h-screen w-full overflow-hidden will-change-transform">
         <video
           ref={videoRef}
-          src={src}
           poster={poster}
           className="h-full w-full object-cover"
           muted
@@ -93,8 +103,23 @@ export default function ScrollyVideo({
           playsInline
           preload="metadata"
           onLoadedMetadata={handleVideoReady}
+          onWaiting={handleWaiting}
+          onCanPlay={handleCanPlay}
+          onCanPlayThrough={handleCanPlay}
           style={{ background: `url(${poster}) center/cover no-repeat` }}
-        />
+        >
+          <source src="/Ritesh_video_ultra.webm" type="video/webm" />
+          <source src={src} type="video/mp4" />
+        </video>
+        {/* Loading indicator for slow networks */}
+        {isBuffering && isReady && (
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-50">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-10 h-10 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+              <p className="text-white text-sm font-medium">Loading video...</p>
+            </div>
+          </div>
+        )}
         {/* Render children (Overlay) passing the springScroll value */}
         {children && children(springScroll)}
       </div>
