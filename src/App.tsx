@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Hero from "./components/Hero";
 import NavBar from "./components/NavBar";
 import About from "./components/About";
@@ -14,14 +14,21 @@ export default function Home() {
   const [isLinkedInOpen, setIsLinkedInOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Called by Hero → ScrollyVideo when the real DOM video fires canplaythrough
+  const handleVideoReady = useCallback(() => {
+    setIsLoaded(true);
+  }, []);
+
   return (
     <>
-      {!isLoaded && (
-        <LoadingScreen onComplete={() => setIsLoaded(true)} />
-      )}
+      {/* Loading screen sits on top; main content always renders in background
+          so the video's <source> element loads immediately on mount */}
+      {!isLoaded && <LoadingScreen />}
+
       <main className="bg-[#121212] min-h-screen text-white">
         <NavBar />
-        <Hero />
+        {/* Pass onReady so LoadingScreen dismisses the moment the video is ready */}
+        <Hero onReady={handleVideoReady} />
         <About />
         <Skills />
         <Projects />
