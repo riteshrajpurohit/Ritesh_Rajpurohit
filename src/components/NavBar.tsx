@@ -49,7 +49,7 @@ export default function NavBar() {
                         <a href="#" className="text-xl md:text-2xl font-black tracking-tighter text-[var(--text-primary)] group flex items-center gap-2 hover:scale-105 transition-transform z-50">
                             <span className="text-[var(--accent)]">{'<'}</span>
                             Ritesh
-                            <span className="text-[var(--accent)] group-hover:animate-pulse">{'>'}</span>
+                            <span className="text-[var(--accent)] group-hover:animate-pulse">{'/>'}</span>
                         </a>
 
                         {/* Desktop Nav */}
