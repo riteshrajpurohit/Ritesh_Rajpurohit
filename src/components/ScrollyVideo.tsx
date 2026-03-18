@@ -30,7 +30,7 @@ export default function ScrollyVideo({ src, onReady, children }: ScrollyVideoPro
     targetProgress.current = latest;
   });
 
-  // ── Notify parent when THIS DOM video element is truly ready ─────────────
+  // ── Notify parent when THIS DOM video element is ready to play ─────────────
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -39,14 +39,22 @@ export default function ScrollyVideo({ src, onReady, children }: ScrollyVideoPro
       if (onReady) onReady();
     };
 
-    // Already cached / buffered
-    if (video.readyState >= 4) {
+    // Already have enough data (readyState >= 3 = HAVE_FUTURE_DATA, can start playing)
+    if (video.readyState >= 3) {
       notify();
       return;
     }
 
-    video.addEventListener("canplaythrough", notify, { once: true });
-    return () => video.removeEventListener("canplaythrough", notify);
+    // 'canplay' fires much earlier than 'canplaythrough' and is enough for scrubbing
+    video.addEventListener("canplay", notify, { once: true });
+
+    // Safety net: force-complete after 3 seconds regardless
+    const safety = setTimeout(notify, 3000);
+
+    return () => {
+      video.removeEventListener("canplay", notify);
+      clearTimeout(safety);
+    };
   }, [onReady]);
 
   // ── Scrub video on scroll ────────────────────────────────────────────────

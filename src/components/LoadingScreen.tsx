@@ -45,9 +45,9 @@ export default function LoadingScreen() {
         // ── Fake progress counter (climbs to ~80%, then stalls waiting for video) -
         let fake = 0;
         const interval = setInterval(() => {
-            if (fake < 80) {
+            if (fake < 90) {
                 fake += Math.random() * 5 + 1;
-                fake = Math.min(fake, 80);
+                fake = Math.min(fake, 90);
                 setProgress(Math.floor(fake));
             }
         }, 90);
