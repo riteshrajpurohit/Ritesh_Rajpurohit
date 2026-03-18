@@ -30,29 +30,41 @@ export default function ScrollyVideo({ src, onReady, children }: ScrollyVideoPro
     targetProgress.current = latest;
   });
 
-  // ── Notify parent when THIS DOM video element is ready to play ─────────────
+  // ── Notify parent when FIRST FRAME is decoded and visible ────────────────
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
+    const onReadyFired = { current: false };
+
     const notify = () => {
+      if (onReadyFired.current) return;
+      onReadyFired.current = true;
+
+      // Force-seek to first frame so it paints visually
+      // (Without this, a video at currentTime=0 that hasn't "started" may stay black)
+      try {
+        video.currentTime = 0.001;
+      } catch (_) { }
+
       if (onReady) onReady();
     };
 
-    // Already have enough data (readyState >= 3 = HAVE_FUTURE_DATA, can start playing)
-    if (video.readyState >= 3) {
+    // readyState 4 = HAVE_ENOUGH_DATA (first frame already decoded)
+    if (video.readyState >= 4) {
       notify();
       return;
     }
 
-    // 'canplay' fires much earlier than 'canplaythrough' and is enough for scrubbing
-    video.addEventListener("canplay", notify, { once: true });
+    // 'loadeddata' fires when the FIRST FRAME is fully decoded — exactly what we need
+    // to guarantee the video is *visually* ready before revealing the hero
+    video.addEventListener("loadeddata", notify, { once: true });
 
-    // Safety net: force-complete after 3 seconds regardless
-    const safety = setTimeout(notify, 3000);
+    // Hard safety: never hold the loading screen more than 5s
+    const safety = setTimeout(notify, 5000);
 
     return () => {
-      video.removeEventListener("canplay", notify);
+      video.removeEventListener("loadeddata", notify);
       clearTimeout(safety);
     };
   }, [onReady]);
@@ -64,10 +76,10 @@ export default function ScrollyVideo({ src, onReady, children }: ScrollyVideoPro
     const updateVideo = () => {
       const video = videoRef.current;
       if (video && !video.seeking && video.duration && video.readyState >= 2) {
-        const currentProgress = video.currentTime / video.duration;
-        const diff = targetProgress.current - currentProgress;
-        if (Math.abs(diff) > 0.001) {
-          video.currentTime = targetProgress.current * video.duration;
+        const newTime = targetProgress.current * video.duration;
+        // Always push currentTime on load (diff threshold 0 → renders frame 0 immediately)
+        if (Math.abs(video.currentTime - newTime) > 0.01) {
+          video.currentTime = newTime;
         }
       }
       rafId = requestAnimationFrame(updateVideo);
@@ -85,9 +97,16 @@ export default function ScrollyVideo({ src, onReady, children }: ScrollyVideoPro
           src={src}
           className="h-full w-full object-cover"
           muted
-          loop={false}
           playsInline
           preload="auto"
+          // autoPlay+pause trick forces browser to decode & paint the first frame
+          // on Safari/iOS which otherwise leaves video black until a manual seek
+          autoPlay
+          onCanPlay={(e) => {
+            const v = e.currentTarget;
+            v.pause();
+            v.currentTime = 0.001;
+          }}
         />
         {children && children(springScroll)}
       </div>
