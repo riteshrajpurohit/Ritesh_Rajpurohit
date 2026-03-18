@@ -1,16 +1,28 @@
 "use client";
 
-import { useScroll, useSpring, useMotionValueEvent, motion, MotionValue } from "framer-motion";
-import { useEffect, useRef, ReactNode } from "react";
+import {
+  useScroll,
+  useSpring,
+  useMotionValueEvent,
+  motion,
+  MotionValue,
+} from "framer-motion";
+import { useEffect, useRef, ReactNode, useState } from "react";
 
 interface ScrollyVideoProps {
   src: string;
+  poster?: string;
   children?: (progress: MotionValue<number>) => ReactNode;
 }
 
-export default function ScrollyVideo({ src, children }: ScrollyVideoProps) {
+export default function ScrollyVideo({
+  src,
+  poster,
+  children,
+}: ScrollyVideoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isReady, setIsReady] = useState(false);
 
   // Scroll progress for the container
   const { scrollYProgress } = useScroll({
@@ -25,7 +37,7 @@ export default function ScrollyVideo({ src, children }: ScrollyVideoProps) {
   const springScroll = useSpring(scrollYProgress, {
     stiffness: 150,
     damping: 30,
-    restDelta: 0.001
+    restDelta: 0.001,
   });
 
   // Update target progress on scroll change
@@ -39,14 +51,20 @@ export default function ScrollyVideo({ src, children }: ScrollyVideoProps) {
     const updateVideo = () => {
       const video = videoRef.current;
 
-      // CRITICAL FIX: Only update currentTime if the browser has finished seeking the LAST requested frame.
-      // If we spam video.currentTime 60 times a second without checking !video.seeking,
-      // the browser's video decoder gets overwhelmed queueing up I-frames, causing extreme lag/freezing.
-      if (video && !video.seeking && video.duration && video.readyState >= 2) {
+      // Only update video if it's ready and not already seeking
+      // This prevents browser lag from queuing up too many I-frames
+      if (
+        video &&
+        !video.seeking &&
+        video.duration &&
+        video.readyState >= 3 &&
+        isReady
+      ) {
         const currentProgress = video.currentTime / video.duration;
         const diff = targetProgress.current - currentProgress;
 
-        if (Math.abs(diff) > 0.001) {
+        // Only update if difference is significant enough
+        if (Math.abs(diff) > 0.0015) {
           video.currentTime = targetProgress.current * video.duration;
         }
       }
@@ -56,7 +74,11 @@ export default function ScrollyVideo({ src, children }: ScrollyVideoProps) {
 
     rafId = requestAnimationFrame(updateVideo);
     return () => cancelAnimationFrame(rafId);
-  }, []);
+  }, [isReady]);
+
+  const handleVideoReady = () => {
+    setIsReady(true);
+  };
 
   return (
     <div ref={containerRef} className="relative h-[400vh] md:h-[600vh]">
@@ -64,11 +86,14 @@ export default function ScrollyVideo({ src, children }: ScrollyVideoProps) {
         <video
           ref={videoRef}
           src={src}
+          poster={poster}
           className="h-full w-full object-cover"
           muted
           loop={false}
           playsInline
-          preload="auto"
+          preload="metadata"
+          onLoadedMetadata={handleVideoReady}
+          style={{ background: `url(${poster}) center/cover no-repeat` }}
         />
         {/* Render children (Overlay) passing the springScroll value */}
         {children && children(springScroll)}
