@@ -1,89 +1,56 @@
 "use client";
 
 import { useScroll, useSpring, useMotionValueEvent, MotionValue } from "framer-motion";
-import { useEffect, useRef, ReactNode } from "react";
+import { useEffect, useRef, ReactNode, useState } from "react";
 
 interface ScrollyVideoProps {
   src: string;
-  onReady?: () => void;
   children?: (progress: MotionValue<number>) => ReactNode;
 }
 
-export default function ScrollyVideo({ src, onReady, children }: ScrollyVideoProps) {
+export default function ScrollyVideo({ src, children }: ScrollyVideoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoReady, setVideoReady] = useState(false);
 
+  // Scroll progress for the container
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
   });
 
+  // Target progress for the video
   const targetProgress = useRef(0);
 
+  // Smooth out the scroll value to prevent sudden jumps
   const springScroll = useSpring(scrollYProgress, {
     stiffness: 150,
     damping: 30,
     restDelta: 0.001,
   });
 
+  // Update target progress on scroll change
   useMotionValueEvent(springScroll, "change", (latest) => {
     targetProgress.current = latest;
   });
 
-  // ── Guarantee first frame is painted before revealing hero ───────────────
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const fired = { current: false };
-
-    const fire = () => {
-      if (fired.current) return;
-      fired.current = true;
-      if (onReady) onReady();
-    };
-
-    // Safety: always resolve within 5 seconds no matter what
-    const safety = setTimeout(fire, 5000);
-
-    const onSeeked = () => {
-      // seeked fires AFTER the browser has decoded and painted the new frame ✓
-      fire();
-    };
-
-    const onLoadedMetadata = () => {
-      // Metadata loaded → we know duration → do the priming seek to frame 1
-      video.addEventListener("seeked", onSeeked, { once: true });
-      video.currentTime = 0.001;
-    };
-
-    // If metadata is already there (e.g. local fast load), seek immediately
-    if (video.readyState >= 1) {
-      video.addEventListener("seeked", onSeeked, { once: true });
-      video.currentTime = 0.001;
-    } else {
-      video.addEventListener("loadedmetadata", onLoadedMetadata, { once: true });
-    }
-
-    return () => {
-      clearTimeout(safety);
-      video.removeEventListener("loadedmetadata", onLoadedMetadata);
-      video.removeEventListener("seeked", onSeeked);
-    };
-  }, [onReady]);
-
-  // ── Scrub video on scroll ────────────────────────────────────────────────
+  // rAF loop: scrub video to scroll position
   useEffect(() => {
     let rafId: number;
 
     const updateVideo = () => {
       const video = videoRef.current;
+
+      // Only seek when the browser has finished processing the LAST seek request.
+      // Spamming currentTime without this guard queues up decoder work and causes lag.
       if (video && !video.seeking && video.duration && video.readyState >= 2) {
-        const newTime = targetProgress.current * video.duration;
-        if (Math.abs(video.currentTime - newTime) > 0.01) {
-          video.currentTime = newTime;
+        const currentProgress = video.currentTime / video.duration;
+        const diff = targetProgress.current - currentProgress;
+        if (Math.abs(diff) > 0.001) {
+          video.currentTime = targetProgress.current * video.duration;
         }
       }
+
       rafId = requestAnimationFrame(updateVideo);
     };
 
@@ -91,17 +58,51 @@ export default function ScrollyVideo({ src, onReady, children }: ScrollyVideoPro
     return () => cancelAnimationFrame(rafId);
   }, []);
 
+  // Mark video as ready once it has at least one decoded frame
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // If already ready (e.g. from preload by loading screen)
+    if (video.readyState >= 2) {
+      setVideoReady(true);
+      return;
+    }
+
+    const onReady = () => setVideoReady(true);
+    video.addEventListener("loadeddata", onReady);
+    video.addEventListener("canplay", onReady);
+
+    // Safety net: show video after 3s no matter what
+    const fallback = setTimeout(() => setVideoReady(true), 3000);
+
+    return () => {
+      video.removeEventListener("loadeddata", onReady);
+      video.removeEventListener("canplay", onReady);
+      clearTimeout(fallback);
+    };
+  }, []);
+
   return (
     <div ref={containerRef} className="relative h-[400vh] md:h-[600vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden will-change-transform">
+
+        {/* Solid dark background — always visible, prevents blank white flash */}
+        <div className="absolute inset-0 bg-[#0a0a0a]" />
+
+        {/* Video fades in only once it has a decoded frame */}
         <video
           ref={videoRef}
           src={src}
-          className="h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700"
+          style={{ opacity: videoReady ? 1 : 0 }}
           muted
+          loop={false}
           playsInline
           preload="auto"
         />
+
+        {/* Overlay content */}
         {children && children(springScroll)}
       </div>
     </div>
